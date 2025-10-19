@@ -28,8 +28,11 @@ cd treexy
 ### Environment Variables
 
 ```env
-POSTGRES_URLCONNECT_STRING=""
+DATABASE_URL="" 
 NEXT_PUBLIC_APP_URL=""
+GOOGLE_API_KEY=""
+CLERK_SECRET_KEY="" 
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""
 ```
 
 ### Database Setup
