@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  clerkId           String    @unique
+  email             String    @unique
+  name              String?
+  avatar            String?
+  generationCount   Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  generations       Generation[]
+  collaborations    Collaboration[]
+  themes            CustomTheme[]
+  versions          TreeVersion[]
+}
+
+model Generation {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  treeStructure     String
+  config            Json
+  imageUrl          String?
+  exportFormats     String[]  @default([])
+  
+  projectType       String?
+  detectedLanguages String[]  @default([])
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  collaborators     Collaboration[]
+  versions          TreeVersion[]
+  comparisons       TreeComparison[]
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Collaboration {
+  id                String    @id @default(cuid())
+  generationId      String
+  generation        Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  role              String    @default("viewer")
+  joinedAt          DateTime  @default(now())
+  
+  @@unique([generationId, userId])
+  @@index([userId])
+}
+
+model CustomTheme {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name              String
+  primaryColor      String
+  accentColor       String
+  backgroundColor   String
+  fontSize          Int
+  fontFamily        String
+  
+  isDefault         Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  
+  @@index([userId])
+}
+
+model TreeVersion {
+  id                String    @id @default(cuid())
+  generationId      String
+  generation        Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  versionNumber     Int
+  treeStructure     String
+  changeDescription String?
+  
+  createdAt         DateTime  @default(now())
+  
+  @@unique([generationId, versionNumber])
+  @@index([generationId])
+}
+
+model TreeComparison {
+  id                String    @id @default(cuid())
+  generationId      String
+  generation        Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  
+  versionA          String
+  versionB          String
+  diffResult        Json
+  
+  createdAt         DateTime  @default(now())
+  
+  @@index([generationId])
+}
+
+model AnalyticsEvent {
+  id                String    @id @default(cuid())
+  eventType         String
+  userId            String?
+  metadata          Json?
+  
+  createdAt         DateTime  @default(now())
+  
+  @@index([eventType])
+  @@index([createdAt])
+}
